@@ -1,0 +1,465 @@
+{\rtf1\ansi\ansicpg1252\deff0\deflang1033{\fonttbl{\f0\fnil\fcharset0 Calibri;}}
+{\*\generator Msftedit 5.41.21.2510;}\viewkind4\uc1\pard\sa200\sl276\slmult1\lang9\f0\fs22 Option Compare Text\par
+Option Explicit\par
+'Option Compare Text is necessary so case is ignored when comparing text\par
+\par
+Sub OCC2_withOCC1()\par
+Application.ScreenUpdating = False\par
+Application.DisplayStatusBar = False\par
+Application.EnableEvents = False\par
+ActiveSheet.DisplayPageBreaks = False\par
+Application.Calculation = xlCalculationManual\par
+\par
+Dim n As Integer 'tracks which row in raw\par
+Dim i As Integer 'indexes patient array\par
+Dim dd As Date 'current date\par
+Dim array_size As Long\par
+Dim dos_max1 As Date\par
+Dim dos_max2 As Date\par
+Dim dos2_max1 As Date\par
+Dim dos2_max2 As Date\par
+Dim id_match As Variant 'var for finding if patient exists in registry\par
+'Dim chart_no1 As Double\par
+'Dim chart_no2 As Double\par
+'Dim rdos_date1 As Date\par
+'Dim rdos_date2 As Date\par
+Dim name_id1 As String\par
+\par
+Dim RawLastRow As Long 'last row of raw data\par
+Dim RegLastRow1 As Long 'last row of registry 1\par
+Dim RegLastRow2 As Long 'last row of registry 2\par
+\par
+Dim wbk As Workbook\par
+Dim registry1 As Workbook\par
+Dim registry2 As Workbook\par
+Dim Sheet As Worksheet\par
+Dim sht As Worksheet\par
+Dim rsht1 As Worksheet\par
+Dim rsht1b As Worksheet\par
+Dim rsht2 As Worksheet\par
+Dim rsht2b As Worksheet\par
+Dim sht_demo As Worksheet\par
+Dim sht_bmi As Worksheet\par
+Dim sht_bmii As Worksheet\par
+Dim sht_a1c As Worksheet\par
+Dim sht_bp As Worksheet\par
+Dim sht_ldl As Worksheet\par
+Dim sht_sq As Worksheet\par
+Dim sht_ci As Worksheet\par
+Dim sht_ins As Worksheet\par
+\par
+                                    \par
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''\par
+Workbooks("2016.12_Registry_RVFHC1_Updated_SK").Activate\par
+Set registry1 = ActiveWorkbook\par
+Set rsht1 = registry1.Worksheets("Montrose Registry") 'name registry sheet\par
+'Set rsht1b = registry1.Worksheets("DOS")\par
+\par
+Workbooks("2016.12_Registry_RVFHC2_Updated_SK").Activate\par
+Set registry2 = ActiveWorkbook\par
+Set rsht2 = registry2.Worksheets("Montrose Registry")\par
+Set rsht2b = registry2.Worksheets("DOS") 'add a sheet to end to enable dos comparison\par
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''\par
+\par
+'Col numbers of each item in registry\par
+Dim essette1 As Integer\par
+Dim essette2 As Integer\par
+Dim first1 As Integer\par
+Dim first2 As Integer\par
+Dim last1 As Integer\par
+Dim last2 As Integer\par
+Dim chart1 As Integer\par
+Dim chart2 As Integer\par
+Dim sex1 As Integer\par
+Dim sex2 As Integer\par
+Dim dob1 As Integer\par
+Dim dob2 As Integer\par
+Dim phone1 As Integer\par
+Dim phone2 As Integer\par
+Dim ethn1 As Integer\par
+Dim ethn2 As Integer\par
+Dim clin1 As Integer\par
+Dim clin2 As Integer\par
+Dim addr1 As Integer\par
+Dim addr2 As Integer\par
+Dim state1 As Integer\par
+Dim state2 As Integer\par
+Dim city1 As Integer\par
+Dim city2 As Integer\par
+'Dim ins As Integer\par
+Dim zip1 As Integer\par
+Dim zip2 As Integer\par
+Dim age1 As Integer\par
+Dim age2 As Integer\par
+Dim lang1 As Integer\par
+Dim lang2 As Integer\par
+Dim diag_dm1 As Integer\par
+Dim diag_dm2 As Integer\par
+Dim diag_cvd1 As Integer\par
+Dim diag_cvd2 As Integer\par
+Dim diag_cad1 As Integer\par
+Dim diag_cad2 As Integer\par
+Dim diag_ht1 As Integer\par
+Dim diag_ht2 As Integer\par
+Dim diag_copd1 As Integer\par
+Dim diag_copd2 As Integer\par
+Dim ldl_col1 As Integer\par
+Dim ldl_col2 As Integer\par
+Dim ldl_dos1 As Integer\par
+Dim ldl_dos2 As Integer\par
+Dim dos11 As Integer\par
+Dim dos12 As Integer\par
+Dim dos21 As Integer\par
+Dim dos22 As Integer\par
+Dim a1c_col1 As Integer\par
+Dim a1c_col2 As Integer\par
+Dim a1c_dos1 As Integer\par
+Dim a1c_dos2 As Integer\par
+Dim bmi_col1 As Integer\par
+Dim bmi_col2 As Integer\par
+Dim bmi_dos1 As Integer\par
+Dim bmi_dos2 As Integer\par
+Dim bmii_col1 As Integer\par
+Dim bmii_col2 As Integer\par
+Dim syst_col1 As Integer\par
+Dim syst_col2 As Integer\par
+Dim dias_col1 As Integer\par
+Dim dias_col2 As Integer\par
+Dim bp_dos1 As Integer\par
+Dim bp_dos2 As Integer\par
+Dim tob_qry1 As Integer\par
+Dim tob_qry2 As Integer\par
+Dim tob_qry_dos1 As Integer\par
+Dim tob_qry_dos2 As Integer\par
+Dim tob_user1 As Integer\par
+Dim tob_user2 As Integer\par
+Dim tob_svc1 As Integer\par
+Dim tob_svc2 As Integer\par
+Dim tob_svc_dos1 As Integer\par
+Dim tob_svc_dos2 As Integer\par
+Dim pneu1 As Integer\par
+Dim pneu2 As Integer\par
+Dim spir1 As Integer\par
+Dim spir2 As Integer\par
+Dim fev1 As Integer\par
+Dim fev2 As Integer\par
+Dim inh_dos1 As Integer\par
+Dim inh_dos2 As Integer\par
+Dim inh_note1 As Integer\par
+Dim inh_note2 As Integer\par
+Dim exam1 As Integer\par
+Dim exam2 As Integer\par
+Dim lynn1 As Integer\par
+Dim lynn2 As Integer\par
+Dim start1 As Integer\par
+Dim start2 As Integer\par
+Dim drt1 As Integer\par
+Dim drt2 As Integer\par
+Dim nappt1 As Integer\par
+Dim nappt2 As Integer\par
+Dim todo11 As Integer\par
+Dim todo12 As Integer 'need to be careful about overwriting? 1,2 specific for each clinic?\par
+Dim sara11 As Integer\par
+Dim sara12 As Integer\par
+Dim todo21 As Integer\par
+Dim todo22 As Integer\par
+Dim sara21 As Integer\par
+Dim sara22 As Integer\par
+\par
+\par
+'insert a column in OCC2 to store name_id for each line\par
+'name_id is last + left(first, 4) + year of birth\par
+RegLastRow2 = rsht2.Cells(rsht2.Rows.Count, "E").End(xlUp).Row\par
+rsht2.Range("B1").EntireColumn.Insert shift:=xlToRight\par
+rsht2.Range("B2:B" & RegLastRow2).Formula = "=E2&(LEFT(F2,4))&Year(H2)"\par
+\par
+'Find column numbers in registry\par
+essette1 = Application.Match("*" & "essette" & "*", rsht1.Range("a1:bz1"), 0)\par
+essette2 = Application.Match("*" & "essette" & "*", rsht2.Range("a1:bz1"), 0)\par
+chart1 = Application.Match("*" & "chart" & "*", rsht1.Range("a1:bz1"), 0)\par
+chart2 = Application.Match("*" & "chart" & "*", rsht2.Range("a1:bz1"), 0)\par
+first1 = Application.Match("*" & "first" & "*", rsht1.Range("a1:bz1"), 0)\par
+first2 = Application.Match("*" & "first" & "*", rsht2.Range("a1:bz1"), 0)\par
+last1 = Application.Match("*" & "last" & "*", rsht1.Range("a1:bz1"), 0)\par
+last2 = Application.Match("*" & "last" & "*", rsht2.Range("a1:bz1"), 0)\par
+sex1 = Application.Match("*" & "gender" & "*", rsht1.Range("a1:bz1"), 0)\par
+sex2 = Application.Match("*" & "gender" & "*", rsht2.Range("a1:bz1"), 0)\par
+dob1 = Application.Match("*" & "dob" & "*", rsht1.Range("a1:bz1"), 0)\par
+dob2 = Application.Match("*" & "dob" & "*", rsht2.Range("a1:bz1"), 0)\par
+dos11 = Application.Match("*" & "recent_dos" & "*", rsht1.Range("a1:bz1"), 0)\par
+dos12 = Application.Match("*" & "recent_dos" & "*", rsht2.Range("a1:bz1"), 0)\par
+dos21 = Application.Match("*" & "actual last DOS" & "*", rsht1.Range("a1:bz1"), 0)\par
+dos22 = Application.Match("*" & "recent_dos2" & "*", rsht2.Range("a1:bz1"), 0)\par
+'ins1 = Application.Match("*" & "insu" & "*", sht_demo.Range("a1:bz1"), 0) 'there is no spot for insurance on sub reg\par
+ethn1 = Application.Match("*" & "race" & "*", rsht1.Range("a1:bz1"), 0)\par
+ethn2 = Application.Match("*" & "race" & "*", rsht2.Range("a1:bz1"), 0)\par
+clin1 = Application.Match("*" & "examin" & "*", rsht1.Range("a1:bz1"), 0)\par
+clin2 = Application.Match("*" & "examin" & "*", rsht2.Range("a1:bz1"), 0)\par
+age1 = Application.Match("*" & "age" & "*", rsht1.Range("a1:bz1"), 0)\par
+age2 = Application.Match("*" & "age" & "*", rsht2.Range("a1:bz1"), 0)\par
+phone1 = Application.Match("*" & "pho" & "*", rsht1.Range("a1:bz1"), 0)\par
+phone2 = Application.Match("*" & "pho" & "*", rsht2.Range("a1:bz1"), 0)\par
+addr1 = Application.Match("*" & "addre" & "*", rsht1.Range("a1:bz1"), 0)\par
+addr2 = Application.Match("*" & "addre" & "*", rsht2.Range("a1:bz1"), 0)\par
+state1 = Application.Match("*" & "state" & "*", rsht1.Range("a1:bz1"), 0)\par
+state2 = Application.Match("*" & "state" & "*", rsht2.Range("a1:bz1"), 0)\par
+zip1 = Application.Match("*" & "zi" & "*", rsht1.Range("a1:bz1"), 0)\par
+zip2 = Application.Match("*" & "zi" & "*", rsht2.Range("a1:bz1"), 0)\par
+city1 = Application.Match("*" & "city" & "*", rsht1.Range("a1:bz1"), 0)\par
+city2 = Application.Match("*" & "city" & "*", rsht2.Range("a1:bz1"), 0)\par
+lang1 = Application.Match("*" & "lang" & "*", rsht1.Range("a1:bz1"), 0)\par
+lang2 = Application.Match("*" & "lang" & "*", rsht2.Range("a1:bz1"), 0)\par
+diag_dm1 = Application.Match("*" & "diag_dm" & "*", rsht1.Range("a1:bz1"), 0)\par
+diag_dm2 = Application.Match("*" & "diag_dm" & "*", rsht2.Range("a1:bz1"), 0)\par
+diag_cvd1 = Application.Match("*" & "diag_cvd" & "*", rsht1.Range("a1:bz1"), 0)\par
+diag_cvd2 = Application.Match("*" & "diag_cvd" & "*", rsht2.Range("a1:bz1"), 0)\par
+diag_cad1 = Application.Match("*" & "diag_cad" & "*", rsht1.Range("a1:bz1"), 0)\par
+diag_cad2 = Application.Match("*" & "diag_cad" & "*", rsht2.Range("a1:bz1"), 0)\par
+diag_ht1 = Application.Match("*" & "diag_ht" & "*", rsht1.Range("a1:bz1"), 0)\par
+diag_ht2 = Application.Match("*" & "diag_ht" & "*", rsht2.Range("a1:bz1"), 0)\par
+diag_copd1 = Application.Match("*" & "diag_copd" & "*", rsht1.Range("a1:bz1"), 0)\par
+diag_copd2 = Application.Match("*" & "diag_copd" & "*", rsht2.Range("a1:bz1"), 0)\par
+ldl_col1 = Application.Match("*" & "ldl_result" & "*", rsht1.Range("a1:bz1"), 0)\par
+ldl_col2 = Application.Match("*" & "ldl_result" & "*", rsht2.Range("a1:bz1"), 0)\par
+ldl_dos1 = Application.Match("*" & "ldl_dos" & "*", rsht1.Range("a1:bz1"), 0)\par
+ldl_dos2 = Application.Match("*" & "ldl_dos" & "*", rsht2.Range("a1:bz1"), 0)\par
+a1c_col1 = Application.Match("*" & "a1c_result" & "*", rsht1.Range("a1:bz1"), 0)\par
+a1c_col2 = Application.Match("*" & "a1c_result" & "*", rsht2.Range("a1:bz1"), 0)\par
+a1c_dos1 = Application.Match("*" & "a1c_dos" & "*", rsht1.Range("a1:bz1"), 0)\par
+a1c_dos2 = Application.Match("*" & "a1c_dos" & "*", rsht2.Range("a1:bz1"), 0)\par
+bmi_col1 = Application.Match("*" & "bmi_result" & "*", rsht1.Range("a1:bz1"), 0)\par
+bmi_col2 = Application.Match("*" & "bmi_result" & "*", rsht2.Range("a1:bz1"), 0)\par
+bmi_dos1 = Application.Match("*" & "bmi_dos" & "*", rsht1.Range("a1:bz1"), 0)\par
+bmi_dos2 = Application.Match("*" & "bmi_dos" & "*", rsht2.Range("a1:bz1"), 0)\par
+bmii_col1 = Application.Match("*" & "bmi_plan" & "*", rsht1.Range("a1:bz1"), 0)\par
+bmii_col2 = Application.Match("*" & "bmi_plan" & "*", rsht2.Range("a1:bz1"), 0)\par
+syst_col1 = Application.Match("*" & "syst" & "*", rsht1.Range("a1:bz1"), 0)\par
+syst_col2 = Application.Match("*" & "syst" & "*", rsht2.Range("a1:bz1"), 0)\par
+dias_col1 = Application.Match("*" & "dias" & "*", rsht1.Range("a1:bz1"), 0)\par
+dias_col2 = Application.Match("*" & "dias" & "*", rsht2.Range("a1:bz1"), 0)\par
+bp_dos1 = Application.Match("*" & "bp_dos" & "*", rsht1.Range("a1:bz1"), 0)\par
+bp_dos2 = Application.Match("*" & "bp_dos" & "*", rsht2.Range("a1:bz1"), 0)\par
+tob_qry1 = Application.Match("*" & "tob_qry" & "*", rsht1.Range("a1:bz1"), 0)\par
+tob_qry2 = Application.Match("*" & "tob_qry" & "*", rsht2.Range("a1:bz1"), 0)\par
+tob_qry_dos1 = Application.Match("*" & "tob_qry_dos" & "*", rsht1.Range("a1:bz1"), 0)\par
+tob_qry_dos2 = Application.Match("*" & "tob_qry_dos" & "*", rsht2.Range("a1:bz1"), 0)\par
+tob_user1 = Application.Match("*" & "tob_user" & "*", rsht1.Range("a1:bz1"), 0)\par
+tob_user2 = Application.Match("*" & "tob_user" & "*", rsht2.Range("a1:bz1"), 0)\par
+tob_svc1 = Application.Match("*" & "tob_svc" & "*", rsht1.Range("a1:bz1"), 0)\par
+tob_svc2 = Application.Match("*" & "tob_svc" & "*", rsht2.Range("a1:bz1"), 0)\par
+tob_svc_dos1 = Application.Match("*" & "tob_svc_dos" & "*", rsht1.Range("a1:bz1"), 0)\par
+tob_svc_dos2 = Application.Match("*" & "tob_svc_dos" & "*", rsht2.Range("a1:bz1"), 0)\par
+pneu1 = Application.Match("*" & "pneu" & "*", rsht1.Range("a1:bz1"), 0)\par
+pneu2 = Application.Match("*" & "pneu" & "*", rsht2.Range("a1:bz1"), 0)\par
+spir1 = Application.Match("*" & "spir" & "*", rsht1.Range("a1:bz1"), 0)\par
+spir2 = Application.Match("*" & "spir" & "*", rsht2.Range("a1:bz1"), 0)\par
+fev1 = Application.Match("*" & "fev" & "*", rsht1.Range("a1:bz1"), 0)\par
+fev2 = Application.Match("*" & "fev" & "*", rsht2.Range("a1:bz1"), 0)\par
+inh_dos1 = Application.Match("*" & "inhaler_dos" & "*", rsht1.Range("a1:bz1"), 0)\par
+inh_dos2 = Application.Match("*" & "inhaler_dos" & "*", rsht2.Range("a1:bz1"), 0)\par
+inh_note1 = Application.Match("*" & "inhaler note" & "*", rsht1.Range("a1:bz1"), 0)\par
+inh_note2 = Application.Match("*" & "inhaler note" & "*", rsht2.Range("a1:bz1"), 0)\par
+exam1 = Application.Match("*" & "exam" & "*", rsht1.Range("a1:bz1"), 0)\par
+exam2 = Application.Match("*" & "exam" & "*", rsht2.Range("a1:bz1"), 0)\par
+lynn1 = Application.Match("*" & "lynn" & "*", rsht1.Range("a1:bz1"), 0)\par
+lynn2 = Application.Match("*" & "lynn" & "*", rsht2.Range("a1:bz1"), 0)\par
+start1 = Application.Match("*" & "start" & "*", rsht1.Range("a1:bz1"), 0)\par
+start2 = Application.Match("*" & "start" & "*", rsht2.Range("a1:bz1"), 0)\par
+nappt1 = Application.Match("*" & "next" & "*", rsht1.Range("a1:bz1"), 0)\par
+nappt2 = Application.Match("*" & "next" & "*", rsht2.Range("a1:bz1"), 0)\par
+'drt1 = Application.Match("*" & "drt" & "*", rsht1.Range("a1:bz1"), 0)\par
+'drt2 = Application.Match("*" & "drt" & "*", rsht2.Range("a1:bz1"), 0)\par
+todo11 = Application.Match("*" & "to do: Sara" & "*", rsht1.Range("a1:bz1"), 0)\par
+todo12 = Application.Match("*" & "to do: Sara" & "*", rsht2.Range("a1:bz1"), 0)\par
+sara11 = Application.Match("*" & "comments:", rsht1.Range("a1:bz1"), 0)\par
+sara12 = Application.Match("*" & "comments:", rsht2.Range("a1:bz1"), 0)\par
+todo21 = Application.Match("*" & "Sara_2" & "*", rsht1.Range("a1:bz1"), 0)\par
+todo22 = Application.Match("*" & "Sara_2" & "*", rsht2.Range("a1:bz1"), 0)\par
+sara21 = Application.Match("*" & "comments:_2", rsht1.Range("a1:bz1"), 0)\par
+sara22 = Application.Match("*" & "comments:_2", rsht2.Range("a1:bz1"), 0)\par
+\par
+n = 2 'n is incrementing in occ1\par
+RegLastRow1 = rsht1.Cells(rsht1.Rows.Count, "E").End(xlUp).Row\par
+\par
+Do Until n = RegLastRow1 + 1\par
+'try to match essette numbers\par
+id_match = Application.Match(rsht1.Cells(n, essette1).Value, rsht2.Range(Cells(1, essette2), Cells(RegLastRow1, essette2)).Value, 0)\par
+'returns row in occ1 which has essette number of occ2\par
+\par
+If IsError(id_match) Then 'if no match is found\par
+'name_id1 = "rsht1.Cells(n, last1).Value" & "Left(rsht1.Cells(n, first1).Value, 4)"\par
+name_id1 = "rsht1.Cells(n, last1).Value" & "Left(rsht1.Cells(n, first1).Value, 4)" & DatePart("yyyy", rsht1.Cells(n, dob1).Value)\par
+id_match = Application.Match(name_id1, rsht2.Range("B2:B3000").Value, 0)\par
+'returns row in occ1 which has name match of occ2\par
+    If IsError(id_match) Then\par
+    'if still no match\par
+    'create new row and fill in details for new patients in registry\par
+   \par
+    rsht2.Cells(RegLastRow2 + 1, first2).Value = rsht1.Cells(n, first1).Value\par
+    rsht2.Cells(RegLastRow2 + 1, last2).Value = rsht1.Cells(n, last1).Value\par
+    rsht2.Cells(RegLastRow2 + 1, chart2).Value = rsht1.Cells(n, chart1).Value\par
+    rsht2.Cells(RegLastRow2 + 1, sex2).Value = rsht1.Cells(n, sex1).Value\par
+    rsht2.Cells(RegLastRow2 + 1, dob2).Value = rsht1.Cells(n, dob1).Value\par
+    rsht2.Cells(RegLastRow2 + 1, dos12).Value = rsht1.Cells(n, dos11).Value\par
+    rsht2.Cells(RegLastRow2 + 1, dos21).Value = rsht1.Cells(n, dos21).Value\par
+    rsht2.Cells(RegLastRow2 + 1, diag_dm2).Value = rsht1.Cells(n, diag_dm1).Value\par
+    rsht2.Cells(RegLastRow2 + 1, diag_cvd2).Value = rsht1.Cells(n, diag_cvd1).Value\par
+    rsht2.Cells(RegLastRow2 + 1, diag_cad2).Value = rsht1.Cells(n, diag_cad1).Value\par
+    rsht2.Cells(RegLastRow2 + 1, diag_ht2).Value = rsht1.Cells(n, diag_ht1).Value\par
+    rsht2.Cells(RegLastRow2 + 1, diag_copd2).Value = rsht1.Cells(n, diag_copd1).Value\par
+    rsht2.Cells(RegLastRow2 + 1, a1c_col2).Value = rsht1.Cells(n, a1c_col1).Value\par
+    rsht2.Cells(RegLastRow2 + 1, a1c_dos2).Value = rsht1.Cells(n, a1c_dos1).Value\par
+    rsht2.Cells(RegLastRow2 + 1, bmi_col2).Value = rsht1.Cells(n, bmi_col1).Value\par
+    rsht2.Cells(RegLastRow2 + 1, bmi_dos2).Value = rsht1.Cells(n, bmi_dos1).Value\par
+    rsht2.Cells(RegLastRow2 + 1, bmii_col2).Value = rsht1.Cells(n, bmii_col1).Value\par
+    rsht2.Cells(RegLastRow2 + 1, syst_col2).Value = rsht1.Cells(n, syst_col1).Value\par
+    rsht2.Cells(RegLastRow2 + 1, dias_col2).Value = rsht1.Cells(n, dias_col1).Value\par
+    rsht2.Cells(RegLastRow2 + 1, bp_dos2).Value = rsht1.Cells(n, bp_dos1).Value\par
+    rsht2.Cells(RegLastRow2 + 1, ldl_col2).Value = rsht1.Cells(n, ldl_col1).Value\par
+    rsht2.Cells(RegLastRow2 + 1, ldl_dos2).Value = rsht1.Cells(n, ldl_dos1).Value\par
+    rsht2.Cells(RegLastRow2 + 1, tob_qry2).Value = rsht1.Cells(n, tob_qry1).Value\par
+    rsht2.Cells(RegLastRow2 + 1, tob_user2).Value = rsht1.Cells(n, tob_user1).Value\par
+    rsht2.Cells(RegLastRow2 + 1, tob_svc2).Value = rsht1.Cells(n, tob_svc1).Value\par
+    rsht2.Cells(RegLastRow2 + 1, tob_svc_dos2).Value = rsht1.Cells(n, tob_svc_dos1).Value\par
+    rsht2.Cells(RegLastRow2 + 1, pneu2).Value = rsht1.Cells(n, pneu1).Value\par
+    rsht2.Cells(RegLastRow2 + 1, spir2).Value = rsht1.Cells(n, spir1).Value\par
+    rsht2.Cells(RegLastRow2 + 1, fev2).Value = rsht1.Cells(n, fev1).Value\par
+    rsht2.Cells(RegLastRow2 + 1, inh_dos2).Value = rsht1.Cells(n, inh_dos1).Value\par
+    rsht2.Cells(RegLastRow2 + 1, inh_note2).Value = rsht1.Cells(n, inh_note1).Value\par
+    rsht2.Cells(RegLastRow2 + 1, exam2).Value = rsht1.Cells(n, exam1).Value\par
+    rsht2.Cells(RegLastRow2 + 1, lynn2).Value = rsht1.Cells(n, lynn1).Value\par
+    rsht2.Cells(RegLastRow2 + 1, start2).Value = rsht1.Cells(n, start1).Value\par
+    'rsht2.Cells(RegLastRow2 + 1, drt2).Value = rsht1.Cells(n, drt1).Value\par
+    rsht2.Cells(RegLastRow2 + 1, phone2).Value = rsht1.Cells(n, phone1).Value\par
+    rsht2.Cells(RegLastRow2 + 1, clin2).Value = rsht1.Cells(n, clin1).Value\par
+    rsht2.Cells(RegLastRow2 + 1, ethn2).Value = rsht1.Cells(n, ethn1).Value\par
+    'rsht1.Cells(RegLastRow + 1, ins1).Value = sht_demo.Cells(n, rins).Value\par
+    rsht2.Cells(RegLastRow2 + 1, addr2).Value = rsht1.Cells(n, addr1).Value\par
+    rsht2.Cells(RegLastRow2 + 1, city2).Value = rsht1.Cells(n, city1).Value\par
+    rsht2.Cells(RegLastRow2 + 1, zip2).Value = rsht1.Cells(n, zip1).Value\par
+    rsht2.Cells(RegLastRow2 + 1, state2).Value = rsht1.Cells(n, state1).Value\par
+    rsht2.Cells(RegLastRow2 + 1, lang2).Value = rsht1.Cells(n, lang1).Value\par
+    rsht2.Cells(RegLastRow2 + 1, todo12).Value = rsht1.Cells(n, todo11).Value\par
+    rsht2.Cells(RegLastRow2 + 1, sara12).Value = rsht1.Cells(n, sara11).Value\par
+    rsht2.Cells(RegLastRow2 + 1, todo22).Value = rsht1.Cells(n, todo21).Value\par
+    rsht2.Cells(RegLastRow2 + 1, sara22).Value = rsht1.Cells(n, sara21).Value\par
+    rsht2.Cells(RegLastRow2 + 1, 2).Value = "OCC"\par
+     \par
+    Else\par
+        If rsht1.Cells(id_match, dos11).Value > rsht2.Cells(id_match, dos12).Value Then\par
+        'copy entire row\par
+        GoTo Copy_Row\par
+        GoTo DOS_Sort\par
+        End If\par
+    End If\par
+  Else\par
+   If rsht1.Cells(id_match, dos11).Value > rsht2.Cells(id_match, dos12).Value Then\par
+     'copy entire row\par
+     GoTo Copy_Row\par
+     GoTo DOS_Sort\par
+     End If\par
+     \par
+  'fill in for that line if dos > existing do\par
+\par
+' set the id match to the row just generated\par
+id_match = RegLastRow2 + 1\par
+End If\par
+ \par
+n = n + 1\par
+Loop\par
+\par
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''\par
+\par
+Copy_Row:\par
+    rsht2.Cells(id_match, first2).Value = rsht1.Cells(n, first1).Value\par
+    rsht2.Cells(id_match, last2).Value = rsht1.Cells(n, last1).Value\par
+    rsht2.Cells(id_match, chart2).Value = rsht1.Cells(n, chart1).Value\par
+    rsht2.Cells(id_match, sex2).Value = rsht1.Cells(n, sex1).Value\par
+    rsht2.Cells(id_match, dob2).Value = rsht1.Cells(n, dob1).Value\par
+    rsht2.Cells(id_match, dos12).Value = rsht1.Cells(n, dos11).Value\par
+    rsht2.Cells(id_match, dos21).Value = rsht1.Cells(n, dos21).Value\par
+    rsht2.Cells(id_match, diag_dm2).Value = rsht1.Cells(n, diag_dm1).Value\par
+    rsht2.Cells(id_match, diag_cvd2).Value = rsht1.Cells(n, diag_cvd1).Value\par
+    rsht2.Cells(id_match, diag_cad2).Value = rsht1.Cells(n, diag_cad1).Value\par
+    rsht2.Cells(id_match, diag_ht2).Value = rsht1.Cells(n, diag_ht1).Value\par
+    rsht2.Cells(id_match, diag_copd2).Value = rsht1.Cells(n, diag_copd1).Value\par
+    rsht2.Cells(id_match, a1c_col2).Value = rsht1.Cells(n, a1c_col1).Value\par
+    rsht2.Cells(id_match, a1c_dos2).Value = rsht1.Cells(n, a1c_dos1).Value\par
+    rsht2.Cells(id_match, bmi_col2).Value = rsht1.Cells(n, bmi_col1).Value\par
+    rsht2.Cells(id_match, bmi_dos2).Value = rsht1.Cells(n, bmi_dos1).Value\par
+    rsht2.Cells(id_match, bmii_col2).Value = rsht1.Cells(n, bmii_col1).Value\par
+    rsht2.Cells(id_match, syst_col2).Value = rsht1.Cells(n, syst_col1).Value\par
+    rsht2.Cells(id_match, dias_col2).Value = rsht1.Cells(n, dias_col1).Value\par
+    rsht2.Cells(id_match, bp_dos2).Value = rsht1.Cells(n, bp_dos1).Value\par
+    rsht2.Cells(id_match, ldl_col2).Value = rsht1.Cells(n, ldl_col1).Value\par
+    rsht2.Cells(id_match, ldl_dos2).Value = rsht1.Cells(n, ldl_dos1).Value\par
+    rsht2.Cells(id_match, tob_qry2).Value = rsht1.Cells(n, tob_qry1).Value\par
+    rsht2.Cells(id_match, tob_user2).Value = rsht1.Cells(n, tob_user1).Value\par
+    rsht2.Cells(id_match, tob_svc2).Value = rsht1.Cells(n, tob_svc1).Value\par
+    rsht2.Cells(id_match, tob_svc_dos2).Value = rsht1.Cells(n, tob_svc_dos1).Value\par
+    rsht2.Cells(id_match, pneu2).Value = rsht1.Cells(n, pneu1).Value\par
+    rsht2.Cells(id_match, spir2).Value = rsht1.Cells(n, spir1).Value\par
+    rsht2.Cells(id_match, fev2).Value = rsht1.Cells(n, fev1).Value\par
+    rsht2.Cells(id_match, inh_dos2).Value = rsht1.Cells(n, inh_dos1).Value\par
+    rsht2.Cells(id_match, inh_note2).Value = rsht1.Cells(n, inh_note1).Value\par
+    rsht2.Cells(id_match, exam2).Value = rsht1.Cells(n, exam1).Value\par
+    rsht2.Cells(id_match, lynn2).Value = rsht1.Cells(n, lynn1).Value\par
+    rsht2.Cells(id_match, start2).Value = rsht1.Cells(n, start1).Value\par
+    'rsht2.Cells(id_match, drt2).Value = rsht1.Cells(n, drt1).Value\par
+    rsht2.Cells(id_match, phone2).Value = rsht1.Cells(n, phone1).Value\par
+    rsht2.Cells(id_match, clin2).Value = rsht1.Cells(n, clin1).Value\par
+    rsht2.Cells(id_match, ethn2).Value = rsht1.Cells(n, ethn1).Value\par
+    'rsht1.Cells(RegLastRow + 1, ins1).Value = sht_demo.Cells(n, rins).Value\par
+    rsht2.Cells(id_match, addr2).Value = rsht1.Cells(n, addr1).Value\par
+    rsht2.Cells(id_match, city2).Value = rsht1.Cells(n, city1).Value\par
+    rsht2.Cells(id_match, zip2).Value = rsht1.Cells(n, zip1).Value\par
+    rsht2.Cells(id_match, state2).Value = rsht1.Cells(n, state1).Value\par
+    rsht2.Cells(id_match, lang2).Value = rsht1.Cells(n, lang1).Value\par
+    rsht2.Cells(id_match, todo12).Value = rsht1.Cells(n, todo11).Value\par
+    rsht2.Cells(id_match, sara12).Value = rsht1.Cells(n, sara11).Value\par
+    'sara notes in 2 should not be overwritten (?)\par
+    'rsht2.Cells(id_match, todo22).Value = rsht1.Cells(n, todo21).Value\par
+    'rsht2.Cells(id_match, sara22).Value = rsht1.Cells(n, sara21).Value\par
+    \par
+    '''''''''''''''''''''''''''''''''''''''''''''\par
+' Create ranges and update DOS1 and DOS2\par
+'''''''''''''''''''''''''''''''''''''''''''''\par
+DOS_Sort:\par
+\par
+rsht2b.Cells(1, 1).Value = Int(rsht2.Cells(n, a1c_dos2).Value)\par
+rsht2b.Cells(2, 1).Value = Int(rsht2.Cells(n, bp_dos2).Value)\par
+rsht2b.Cells(3, 1).Value = Int(rsht2.Cells(n, bmi_dos2).Value)\par
+rsht2b.Cells(4, 1).Value = Int(rsht2.Cells(n, ldl_dos2).Value)\par
+rsht2b.Cells(5, 1).Value = Int(rsht2.Cells(n, dos12).Value)\par
+rsht2b.Cells(6, 1).Value = Int(rsht2.Cells(n, dos22).Value)\par
+\par
+Dim dos_rng2 As Range\par
+Set dos_rng2 = rsht2b.Range(rsht2b.Cells(1, 1), rsht2b.Cells(6, 1))\par
+    \par
+dos_max2 = Application.Max(dos_rng2)\par
+dos2_max2 = 0 'place holder incase there is no other dos\par
+On Error Resume Next\par
+\par
+dos2_max2 = Application.Large(dos_rng2, Application.CountIf(dos_rng2, Application.Max(dos_rng2)) + 1)\par
+\par
+If dos_max2 > 1 / 1 / 2000 Then\par
+    rsht2.Cells(n, dos12).Value = dos_max2\par
+    Else\par
+End If\par
+\par
+If dos2_max2 > 1 / 1 / 2000 Then\par
+    rsht2.Cells(n, dos22).Value = dos2_max2\par
+    Else\par
+End If\par
+    \par
+\par
+EndMacro:\par
+Application.ScreenUpdating = True\par
+Application.DisplayStatusBar = True\par
+Application.EnableEvents = True\par
+ActiveSheet.DisplayPageBreaks = True\par
+Application.Calculation = xlCalculationAutomatic\par
+\par
+End Sub\par
+}
+ 

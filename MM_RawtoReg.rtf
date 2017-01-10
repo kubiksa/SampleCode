@@ -1,0 +1,601 @@
+{\rtf1\ansi\ansicpg1252\deff0\deflang1033{\fonttbl{\f0\fnil\fcharset0 Calibri;}}
+{\*\generator Msftedit 5.41.21.2510;}\viewkind4\uc1\pard\sa200\sl276\slmult1\lang9\f0\fs22 Option Compare Text\par
+Option Explicit\par
+'Option Compare Text is necessary so case is ignored when comparing text\par
+\par
+Sub MM_RawtoReg()\par
+Application.ScreenUpdating = False\par
+Application.DisplayStatusBar = False\par
+Application.EnableEvents = False\par
+ActiveSheet.DisplayPageBreaks = False\par
+Application.Calculation = xlCalculationManual\par
+\par
+Dim n As Integer 'tracks which row in raw\par
+Dim i As Integer 'indexes patient array\par
+Dim array_size As Long\par
+Dim meas As String 'var to specify which sheet of raw code is looking at\par
+Dim m1 As Integer 'var for col with measure\par
+Dim dd As Date\par
+Dim ddob As Date\par
+Dim id_match As Variant 'var for finding if patient exists in registry\par
+Dim dos_2 As Variant\par
+Dim dos_max As Date\par
+Dim dos2_max As Date\par
+\par
+Dim RawLastRow As Long 'last row of raw data\par
+Dim RegLastRow As Long 'last row of registry\par
+\par
+Dim wbk As Workbook\par
+Dim registry As Workbook\par
+Dim Sheet As Worksheet\par
+Dim sht As Worksheet\par
+Dim rsht As Worksheet\par
+Dim rshtb As Worksheet\par
+Dim sht_demo As Worksheet\par
+Dim sht_visit As Worksheet\par
+Dim sht_bmi As Worksheet\par
+Dim sht_bmii As Worksheet\par
+Dim sht_a1c As Worksheet\par
+Dim sht_bp As Worksheet\par
+Dim sht_ldl As Worksheet\par
+Dim sht_sq As Worksheet\par
+Dim sht_ci As Worksheet\par
+Dim sht_pneu As Worksheet\par
+Dim sht_spi As Worksheet\par
+\par
+\par
+'name sheets in raw data,  need to make flexible since some contain spaces or names change\par
+Set wbk = ThisWorkbook  'this workbook should be the one with raw data\par
+For Each Sheet In wbk.Sheets\par
+    If Sheet.Name Like "*" & "demo" & "*" Then\par
+        Set sht_demo = Sheet\par
+    ElseIf Sheet.Name Like "*" & "visit" & "*" Then\par
+        Set sht_visit = Sheet\par
+    ElseIf Sheet.Name Like "*" & "bmi out" & "*" Then\par
+        Set sht_bmi = Sheet\par
+    ElseIf Sheet.Name Like "*" & "bmi int" & "*" Then\par
+        Set sht_bmii = Sheet\par
+    ElseIf Sheet.Name Like "*" & "A1c" & "*" Then\par
+        Set sht_a1c = Sheet\par
+    ElseIf Sheet.Name Like "*" & "BP" & "*" Then\par
+        Set sht_bp = Sheet\par
+    ElseIf Sheet.Name Like "*" & "LDL" & "*" Then\par
+        Set sht_ldl = Sheet\par
+    ElseIf Sheet.Name Like "*" & "queried" & "*" Then\par
+        Set sht_sq = Sheet\par
+    ElseIf Sheet.Name Like "*" & "cess" & "*" Then\par
+        Set sht_ci = Sheet\par
+    ElseIf Sheet.Name Like "*" & "pneu" & "*" Then\par
+        Set sht_pneu = Sheet\par
+    ElseIf Sheet.Name Like "*" & "spir" & "*" Then\par
+        Set sht_spi = Sheet\par
+    End If\par
+Next\par
+\par
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''\par
+Workbooks("2016.11_Registry_MM_Updated_SK").Activate                                         '\par
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''\par
+\par
+dd = Application.EoMonth(Date, -1) 'finds the last day of the prev month\par
+Set registry = ActiveWorkbook\par
+Set rsht = registry.Worksheets("MM Registry") 'name registry sheet\par
+Set rshtb = registry.Worksheets("DOS") 'name dos sheet used to calc dos1 and dos2\par
+\par
+'Col numbers of each item in registry\par
+Dim first As Integer\par
+Dim last As Integer\par
+Dim chart As Integer\par
+Dim sex As Integer\par
+Dim dob As Integer\par
+Dim dos1 As Integer\par
+Dim dos2 As Integer\par
+Dim dm As Integer\par
+Dim cvd As Integer\par
+Dim cad As Integer\par
+Dim ht As Integer\par
+Dim copd As Integer\par
+Dim a1c_col As Integer\par
+Dim a1c_dos As Integer\par
+Dim bmi_col As Integer\par
+Dim bmi_dos As Integer\par
+Dim bmii_col As Integer\par
+Dim syst_col As Integer\par
+Dim dias_col As Integer\par
+Dim bp_dos As Integer\par
+Dim ldl_col As Integer\par
+Dim ldl_dos As Integer\par
+Dim tob_qry As Integer\par
+Dim tob_qry_dos As Integer\par
+Dim tob_user As Integer\par
+Dim tob_svc As Integer\par
+Dim tob_svc_dos As Integer\par
+Dim exam As Integer\par
+Dim drt As Integer\par
+Dim start As Integer\par
+Dim todo As Integer\par
+Dim sara As Integer\par
+Dim age As Integer\par
+Dim state As Integer\par
+Dim addr As Integer\par
+Dim city As Integer\par
+Dim zip As Integer\par
+Dim phone As Integer\par
+Dim race As Integer\par
+Dim lang As Integer\par
+Dim pneu As Integer\par
+Dim spiro As Integer\par
+Dim fev As Integer\par
+Dim inh_dos As Integer\par
+Dim inh_note As Integer\par
+Dim letter As Integer\par
+Dim napp As Integer\par
+Dim ins As Integer\par
+Dim lynn As Integer\par
+Dim clin As Integer\par
+Dim sq_col As Integer\par
+Dim sq_dos As Integer\par
+\par
+\par
+'Col numbers for each item in raw data\par
+Dim rchart As Integer\par
+Dim rfirst As Integer\par
+Dim rlast As Integer\par
+Dim rsex As Integer\par
+Dim rethn As Integer\par
+Dim rdob As Integer\par
+Dim rphone As Integer\par
+Dim rstate As Integer\par
+Dim rcity As Integer\par
+Dim raddr As Integer\par
+Dim rzip As Integer\par
+Dim rdos As Integer\par
+Dim rbmi As Integer\par
+Dim rsyst As Integer\par
+Dim rdias As Integer\par
+Dim rdiag As Integer\par
+Dim reth As Integer\par
+Dim rclin As Integer\par
+Dim rins As Integer\par
+\par
+'find column numbers in sub-reg\par
+chart = Application.match("*" & "chart" & "*", rsht.Range("1:1"), 0)\par
+last = Application.match("*" & "last" & "*", rsht.Range("1:1"), 0)\par
+first = Application.match("*" & "first" & "*", rsht.Range("1:1"), 0)\par
+sex = Application.match("*" & "gend" & "*", rsht.Range("1:1"), 0)\par
+dob = Application.match("*" & "dob" & "*", rsht.Range("1:1"), 0)\par
+dos1 = Application.match("*" & "recent_dos" & "*", rsht.Range("1:1"), 0)\par
+dos2 = Application.match("*" & "recent_dos2" & "*", rsht.Range("1:1"), 0)\par
+dm = Application.match("*" & "dm" & "*", rsht.Range("1:1"), 0)\par
+cvd = Application.match("*" & "cvd" & "*", rsht.Range("1:1"), 0)\par
+cad = Application.match("*" & "cad" & "*", rsht.Range("1:1"), 0)\par
+ht = Application.match("*" & "ht" & "*", rsht.Range("1:1"), 0)\par
+copd = Application.match("*" & "copd" & "*", rsht.Range("1:1"), 0)\par
+bmi_col = Application.match("*" & "bmi_result" & "*", rsht.Range("1:1"), 0)\par
+bmi_dos = Application.match("*" & "bmi_dos" & "*", rsht.Range("1:1"), 0)\par
+bmii_col = Application.match("*" & "bmi_plan" & "*", rsht.Range("1:1"), 0)\par
+a1c_col = Application.match("*" & "a1c_result" & "*", rsht.Range("1:1"), 0)\par
+a1c_dos = Application.match("*" & "a1c_dos" & "*", rsht.Range("1:1"), 0)\par
+bp_dos = Application.match("*" & "bp_dos" & "*", rsht.Range("1:1"), 0)\par
+syst_col = Application.match("*" & "syst" & "*", rsht.Range("1:1"), 0)\par
+dias_col = Application.match("*" & "dias" & "*", rsht.Range("1:1"), 0)\par
+ldl_col = Application.match("*" & "ldl_result" & "*", rsht.Range("1:1"), 0)\par
+ldl_dos = Application.match("*" & "ldl_dos" & "*", rsht.Range("1:1"), 0)\par
+tob_qry = Application.match("*" & "tob_qry" & "*", rsht.Range("1:1"), 0)\par
+tob_qry_dos = Application.match("*" & "tob_qry_dos" & "*", rsht.Range("1:1"), 0)\par
+tob_user = Application.match("*" & "tob_user" & "*", rsht.Range("1:1"), 0)\par
+tob_svc = Application.match("*" & "tob_svc" & "*", rsht.Range("1:1"), 0)\par
+tob_svc_dos = Application.match("*" & "tob_svc_dos" & "*", rsht.Range("1:1"), 0)\par
+pneu = Application.match("*" & "pneu" & "*", rsht.Range("1:1"), 0)\par
+spiro = Application.match("*" & "spiro" & "*", rsht.Range("1:1"), 0)\par
+fev = Application.match("*" & "fev" & "*", rsht.Range("1:1"), 0)\par
+inh_dos = Application.match("*" & "ler_dos" & "*", rsht.Range("1:1"), 0)\par
+inh_note = Application.match("*" & "Inh" & "*" & "note" & "*", rsht.Range("1:1"), 0)\par
+exam = Application.match("*" & "exam" & "*", rsht.Range("1:1"), 0)\par
+lynn = Application.match("*" & "lynn" & "*", rsht.Range("1:1"), 0)\par
+start = Application.match("*" & "start" & "*", rsht.Range("1:1"), 0)\par
+drt = Application.match("*" & "drt" & "*", rsht.Range("1:1"), 0)\par
+todo = Application.match("*" & "Do:" & "*", rsht.Range("1:1"), 0)\par
+sara = Application.match("*" & "comment" & "*", rsht.Range("1:1"), 0)\par
+age = Application.match("*" & "age" & "*", rsht.Range("1:1"), 0)\par
+state = Application.match("*" & "state" & "*", rsht.Range("1:1"), 0)\par
+addr = Application.match("*" & "addr" & "*", rsht.Range("1:1"), 0)\par
+city = Application.match("*" & "city" & "*", rsht.Range("1:1"), 0)\par
+zip = Application.match("*" & "zip" & "*", rsht.Range("1:1"), 0)\par
+phone = Application.match("*" & "phone" & "*", rsht.Range("1:1"), 0)\par
+race = Application.match("*" & "race" & "*", rsht.Range("1:1"), 0)\par
+lang = Application.match("*" & "guage" & "*", rsht.Range("1:1"), 0)\par
+ins = Application.match("*" & "insur" & "*", rsht.Range("1:1"), 0)\par
+letter = Application.match("*" & "letter" & "*", rsht.Range("1:1"), 0)\par
+napp = Application.match("*" & "next" & "*", rsht.Range("1:1"), 0)\par
+clin = Application.match("*" & "clinician" & "*", rsht.Range("1:1"), 0)\par
+race = Application.match("*" & "race" & "*", rsht.Range("1:1"), 0)\par
+sq_col = Application.match("*" & "tob_qry" & "*", rsht.Range("1:1"), 0)\par
+sq_dos = Application.match("*" & "tob_qry_dos" & "*", rsht.Range("1:1"), 0)\par
+\par
+\par
+'''''''''''''''''''''''''''''''''''\par
+'       Demographics Page         '\par
+'''''''''''''''''''''''''''''''''''\par
+\par
+ 'returns col number of each field in raw data\par
+rchart = Application.match("*" & "chart" & "*", sht_demo.Range("a1:z1"), 0)\par
+rfirst = Application.match("*" & "first" & "*", sht_demo.Range("a1:z1"), 0)\par
+rlast = Application.match("*" & "last" & "*", sht_demo.Range("a1:z1"), 0)\par
+rsex = Application.match("*" & "gender" & "*", sht_demo.Range("a1:z1"), 0)\par
+rdob = Application.match("*" & "birth" & "*", sht_demo.Range("a1:z1"), 0)\par
+rins = Application.match("*" & "insu" & "*", sht_demo.Range("a1:z1"), 0)\par
+rethn = Application.match("*" & "ethn" & "*", sht_demo.Range("a1:z1"), 0)\par
+rclin = Application.match("*" & "clin" & "*", sht_demo.Range("a1:z1"), 0)\par
+rphone = Application.match("*" & "pho" & "*", sht_demo.Range("a1:z1"), 0)\par
+rstate = Application.match("*" & "sta" & "*", sht_demo.Range("a1:z1"), 0)\par
+rzip = Application.match("*" & "zi" & "*", sht_demo.Range("a1:z1"), 0)\par
+rcity = Application.match("*" & "patient city" & "*", sht_demo.Range("a1:z1"), 0)\par
+rdiag = Application.match("*" & "ICD" & "*", sht_demo.Range("a1:z1"), 0)\par
+raddr = Application.match("*" & "addr" & "*", sht_demo.Range("a1:z1"), 0)\par
+\par
+'insert new demo data into registry\par
+n = 2 'row where raw data begins on the raw file\par
+'find last row of data based on patient number (used over again for each sheet)\par
+RawLastRow = sht_demo.Cells(sht_demo.Rows.Count, "C").End(xlUp).Row\par
+\par
+Do Until n = RawLastRow + 1\par
+'check if the client is already in the registry\par
+RegLastRow = rsht.Cells(rsht.Rows.Count, "C").End(xlUp).Row\par
+\par
+id_match = Application.match(sht_demo.Cells(n, 1).Value, rsht.Range("C1:C3000").Value, 0) 'returns row in the registry of the match\par
+If IsError(id_match) Then 'if no match is found\par
+    \par
+    'create new row and fill in details for new patients in registry\par
+    rsht.Cells(RegLastRow + 1, first).Value = sht_demo.Cells(n, rfirst).Value\par
+    rsht.Cells(RegLastRow + 1, last).Value = sht_demo.Cells(n, rlast).Value\par
+    rsht.Cells(RegLastRow + 1, chart).Value = sht_demo.Cells(n, rchart).Value\par
+    rsht.Cells(RegLastRow + 1, sex).Value = sht_demo.Cells(n, rsex).Value\par
+    rsht.Cells(RegLastRow + 1, dob).Value = sht_demo.Cells(n, rdob).Value\par
+    'ddob = rsht.Cells(RegLastRow + 1, dob).Value -- need to do this at the end\par
+    rsht.Cells(RegLastRow + 1, phone).Value = sht_demo.Cells(n, rphone).Value\par
+    rsht.Cells(RegLastRow + 1, clin).Value = sht_demo.Cells(n, rclin).Value\par
+    rsht.Cells(RegLastRow + 1, race).Value = sht_demo.Cells(n, rethn).Value\par
+    rsht.Cells(RegLastRow + 1, ins).Value = sht_demo.Cells(n, rins).Value\par
+    rsht.Cells(RegLastRow + 1, city).Value = sht_demo.Cells(n, rcity).Value\par
+    rsht.Cells(RegLastRow + 1, zip).Value = sht_demo.Cells(n, rzip).Value\par
+    rsht.Cells(RegLastRow + 1, state).Value = sht_demo.Cells(n, rstate).Value\par
+    'age_num = WorksheetFunction.RoundDown((dd - ddob) / 365, 0) 'compute age\par
+    'rsht.Cells(RegLastRow + 1, age).Value = age_num\par
+    rsht.Cells(RegLastRow + 1, addr).Value = sht_demo.Cells(n, raddr).Value\par
+\par
+   If sht_demo.Cells(n, rdiag).Value = "E78" Then\par
+        rsht.Cells(RegLastRow + 1, cvd).Value = sht_demo.Cells(n, rdiag).Value\par
+   ElseIf sht_demo.Cells(n, rdiag).Value = "E11" Then\par
+        rsht.Cells(RegLastRow + 1, dm).Value = sht_demo.Cells(n, rdiag).Value\par
+    ElseIf sht_demo.Cells(n, rdiag).Value = "I10" Then\par
+        rsht.Cells(RegLastRow + 1, cvd).Value = sht_demo.Cells(n, rdiag).Value\par
+        rsht.Cells(RegLastRow + 1, ht).Value = sht_demo.Cells(n, rdiag).Value\par
+    ElseIf sht_demo.Cells(n, rdiag).Value = "I25" Then\par
+        rsht.Cells(RegLastRow + 1, cvd).Value = sht_demo.Cells(n, rdiag).Value\par
+        rsht.Cells(RegLastRow + 1, cad).Value = sht_demo.Cells(n, rdiag).Value\par
+    ElseIf sht_demo.Cells(n, rdiag).Value = "J44" Then\par
+        rsht.Cells(RegLastRow + 1, copd).Value = sht_demo.Cells(n, rdiag).Value\par
+    ElseIf sht_demo.Cells(n, rdiag).Value = "I10" Then\par
+        rsht.Cells(RegLastRow + 1, cvd).Value = sht_demo.Cells(n, rdiag).Value\par
+        rsht.Cells(RegLastRow + 1, cad).Value = sht_demo.Cells(n, rdiag).Value\par
+        rsht.Cells(RegLastRow + 1, ht).Value = sht_demo.Cells(n, rdiag).Value\par
+    End If\par
+    \par
+' set the id match to the row just generated\par
+     id_match = RegLastRow + 1\par
+     \par
+     'if there is a match fill in for that patient\par
+     'not sure if need to do this...will these things get updated?\par
+Else\par
+    rsht.Cells(id_match, first).Value = sht_demo.Cells(n, rfirst).Value\par
+    rsht.Cells(id_match, last).Value = sht_demo.Cells(n, rlast).Value\par
+    rsht.Cells(id_match, chart).Value = sht_demo.Cells(n, rchart).Value\par
+    rsht.Cells(id_match, sex).Value = sht_demo.Cells(n, rsex).Value\par
+    rsht.Cells(id_match, dob).Value = sht_demo.Cells(n, rdob).Value\par
+    rsht.Cells(id_match, phone).Value = sht_demo.Cells(n, rphone).Value\par
+    rsht.Cells(id_match, clin).Value = sht_demo.Cells(n, rclin).Value\par
+    rsht.Cells(id_match, race).Value = sht_demo.Cells(n, rethn).Value\par
+    rsht.Cells(id_match, ins).Value = sht_demo.Cells(n, rins).Value\par
+    rsht.Cells(id_match, city).Value = sht_demo.Cells(n, rcity).Value\par
+    \par
+     If sht_demo.Cells(n, rdiag).Value = "E78" Then\par
+        rsht.Cells(id_match, cvd).Value = sht_demo.Cells(n, rdiag).Value\par
+        'diag_check = sht_demo.Cells(n, rdiag).Value\par
+    ElseIf sht_demo.Cells(n, rdiag).Value = "E11" Then\par
+        rsht.Cells(id_match, dm).Value = sht_demo.Cells(n, rdiag).Value\par
+    ElseIf sht_demo.Cells(n, rdiag).Value = "I10" Then\par
+        rsht.Cells(id_match, cvd).Value = sht_demo.Cells(n, rdiag).Value\par
+        rsht.Cells(id_match, ht).Value = sht_demo.Cells(n, rdiag).Value\par
+    ElseIf sht_demo.Cells(n, rdiag).Value = "I25" Then\par
+        rsht.Cells(id_match, cvd).Value = sht_demo.Cells(n, rdiag).Value\par
+        rsht.Cells(id_match, cad).Value = sht_demo.Cells(n, rdiag).Value\par
+    ElseIf sht_demo.Cells(n, rdiag).Value = "J44" Then\par
+        rsht.Cells(id_match, copd).Value = sht_demo.Cells(n, rdiag).Value\par
+    ElseIf sht_demo.Cells(n, rdiag).Value = "I10" Then\par
+        rsht.Cells(id_match, cvd).Value = sht_demo.Cells(n, rdiag).Value\par
+        rsht.Cells(id_match, cad).Value = sht_demo.Cells(n, rdiag).Value\par
+        rsht.Cells(id_match, ht).Value = sht_demo.Cells(n, rdiag).Value\par
+    End If\par
+    \par
+    'ddob = rsht.Cells(id_match, dob).Value\par
+    'age_num = WorksheetFunction.RoundDown((dd - ddob) / 365, 0)\par
+    'rsht.Cells(id_match, age).Value = age_num\par
+    \par
+End If\par
+\par
+n = n + 1\par
+Loop\par
+    \par
+'''''''''''''''''''''''''''''''''''''\par
+'        Visit List Page            '\par
+'''''''''''''''''''''''''''''''''''''\par
+' find patient and update last dos?\par
+'create the patients seen array which will be used to compare to out of range patients to find in range patients\par
+'RawLastRow = sht_visit.Cells(sht_visit.Rows.Count, "A").End(xlUp).Row\par
+Dim visit As Variant\par
+Dim visit_lastrow As Double\par
+visit_lastrow = sht_visit.Cells(sht_visit.Rows.Count, "A").End(xlUp).Row\par
+visit = sht_visit.Range("A2:A" & visit_lastrow).Value\par
+\par
+n = 2\par
+Do Until n = visit_lastrow + 1\par
+id_match = Application.match(sht_visit.Cells(n, 1).Value, rsht.Range("C1:C3000").Value, 0) 'returns row in the registry of the match\par
+If IsError(id_match) Then 'if no match is found\par
+'do nothing\par
+Else\par
+dos_2 = rsht.Cells(id_match, dos1).Value\par
+rsht.Cells(id_match, dos2).Value = dos_2\par
+rsht.Cells(id_match, dos1).Value = dd\par
+End If\par
+n = n + 1\par
+Loop\par
+\par
+'''''''''''''''''''''''''''''''''''''\par
+' BMI Outliers Page                 '\par
+'''''''''''''''''''''''''''''''''''''\par
+'find patient numbers and put in bogus bmi to show they are out of range\par
+'update dos\par
+\par
+Dim OutRangeBMI As Variant\par
+Dim OutRangeBMI_lastrow As Double\par
+OutRangeBMI_lastrow = sht_bmi.Cells(sht_bmi.Rows.Count, "A").End(xlUp).Row\par
+OutRangeBMI = sht_bmi.Range("A2:A" & OutRangeBMI_lastrow).Value\par
+\par
+'''''''''''''''''''''''''''''''\par
+'              A1c            '\par
+'''''''''''''''''''''''''''''''\par
+Dim A1c As Variant\par
+Dim A1c_lastrow As Double\par
+A1c_lastrow = sht_a1c.Cells(sht_a1c.Rows.Count, "A").End(xlUp).Row\par
+A1c = sht_bmi.Range("A2:A" & A1c_lastrow).Value\par
+\par
+'''''''''''''''''''''''''''''\par
+'             BP            '\par
+'''''''''''''''''''''''''''''\par
+Dim bp As Variant\par
+Dim bp_lastrow As Double\par
+bp_lastrow = sht_bp.Cells(sht_bp.Rows.Count, "A").End(xlUp).Row\par
+bp = sht_bp.Range("A2:A" & bp_lastrow).Value\par
+\par
+''''''''''''''''''''''''''''''''\par
+'            LDL               '\par
+''''''''''''''''''''''''''''''''\par
+Dim ldl As Variant\par
+Dim ldl_lastrow As Double\par
+ldl_lastrow = sht_ldl.Cells(sht_ldl.Rows.Count, "A").End(xlUp).Row\par
+ldl = sht_ldl.Range("A2:A" & ldl_lastrow).Value\par
+\par
+''Compare Visit List to Outliers to Determine 999 (out of range) or 1 (in range)''''\par
+\par
+Dim match As Boolean\par
+Dim x, y As Variant\par
+x = 2\par
+For x = 2 To visit_lastrow\par
+'For Each x In visit\par
+    match = False\par
+    y = 2\par
+    Do While y < OutRangeBMI_lastrow + 1\par
+        If sht_visit.Cells(x, 1).Value = sht_bmi.Cells(y, 1).Value Then\par
+          match = True\par
+          id_match = Application.match(sht_visit.Cells(x, 1).Value, rsht.Range("C1:C3000").Value, 0)\par
+          rsht.Cells(id_match, bmi_col).Value = 999\par
+          rsht.Cells(id_match, bmi_dos).Value = dd\par
+          y = OutRangeBMI_lastrow + 1\par
+        Else\par
+          y = y + 1\par
+          If y = OutRangeBMI_lastrow + 1 Then\par
+           id_match = Application.match(sht_visit.Cells(x, 1).Value, rsht.Range("C1:C3000").Value, 0)\par
+           rsht.Cells(id_match, bmi_col).Value = 1\par
+           rsht.Cells(id_match, bmi_dos).Value = dd\par
+         End If\par
+        End If\par
+    Loop\par
+    \par
+    match = False\par
+    y = 2\par
+    Do While y < A1c_lastrow + 1\par
+        If sht_visit.Cells(x, 1).Value = sht_a1c.Cells(y, 1).Value Then\par
+          match = True\par
+          id_match = Application.match(sht_visit.Cells(x, 1).Value, rsht.Range("C1:C3000").Value, 0)\par
+          rsht.Cells(id_match, a1c_col).Value = 999\par
+          rsht.Cells(id_match, a1c_dos).Value = dd\par
+          y = A1c_lastrow + 1\par
+        Else\par
+          y = y + 1\par
+          If y = A1c_lastrow + 1 Then\par
+           id_match = Application.match(sht_visit.Cells(x, 1).Value, rsht.Range("C1:C3000").Value, 0)\par
+           rsht.Cells(id_match, a1c_col).Value = 1\par
+           rsht.Cells(id_match, a1c_dos).Value = dd\par
+         End If\par
+        End If\par
+    Loop\par
+    \par
+    match = False\par
+    y = 2\par
+    Do While y < bp_lastrow + 1\par
+        If sht_visit.Cells(x, 1).Value = sht_bp.Cells(y, 1).Value Then\par
+          match = True\par
+          id_match = Application.match(sht_visit.Cells(x, 1).Value, rsht.Range("C1:C3000").Value, 0)\par
+          rsht.Cells(id_match, syst_col).Value = 999\par
+          rsht.Cells(id_match, dias_col).Value = 999\par
+          rsht.Cells(id_match, bp_dos).Value = dd\par
+          y = bp_lastrow + 1\par
+        Else\par
+          y = y + 1\par
+          If y = bp_lastrow + 1 Then\par
+           id_match = Application.match(sht_visit.Cells(x, 1).Value, rsht.Range("C1:C3000").Value, 0)\par
+           rsht.Cells(id_match, syst_col).Value = 1\par
+           rsht.Cells(id_match, dias_col).Value = 1\par
+           rsht.Cells(id_match, bp_dos).Value = dd\par
+         End If\par
+        End If\par
+    Loop\par
+    \par
+    match = False\par
+    y = 2\par
+    Do While y < ldl_lastrow + 1\par
+        If sht_visit.Cells(x, 1).Value = sht_ldl.Cells(y, 1).Value Then\par
+          match = True\par
+          id_match = Application.match(sht_visit.Cells(x, 1).Value, rsht.Range("C1:C3000").Value, 0)\par
+          rsht.Cells(id_match, ldl_col).Value = 999\par
+          rsht.Cells(id_match, ldl_dos).Value = dd\par
+          y = ldl_lastrow + 1\par
+        Else\par
+          y = y + 1\par
+          If y = ldl_lastrow + 1 Then\par
+           id_match = Application.match(sht_visit.Cells(x, 1).Value, rsht.Range("C1:C3000").Value, 0)\par
+           rsht.Cells(id_match, ldl_col).Value = 1\par
+           rsht.Cells(id_match, ldl_dos).Value = dd\par
+         End If\par
+        End If\par
+    Loop\par
+    \par
+Next x\par
+        \par
+''''''''''''''''''''''''''''\par
+' Go through remaining pages to insert Y\par
+'''''''''''''''''''''''''''''''\par
+\par
+n = 2\par
+RawLastRow = sht_bmii.Cells(sht_bmii.Rows.Count, "A").End(xlUp).Row\par
+Do Until n = RawLastRow + 1\par
+id_match = Application.match(sht_bmii.Cells(n, 1).Value, rsht.Range("C1:C3000").Value, 0) 'returns row in the registry of the match\par
+    If IsError(id_match) Then 'if no match is found\par
+    'do nothing\par
+    Else\par
+    rsht.Cells(id_match, bmii_col).Value = "Y"\par
+    End If\par
+    n = n + 1\par
+Loop\par
+\par
+n = 2 'reset n\par
+RawLastRow = sht_sq.Cells(sht_sq.Rows.Count, "A").End(xlUp).Row\par
+Do Until n = RawLastRow\par
+id_match = Application.match(sht_sq.Cells(n, 1).Value, rsht.Range("C1:C3000").Value, 0) 'returns row in the registry of the match\par
+    If IsError(id_match) Then 'if no match is found\par
+    'do nothing\par
+    Else\par
+    rsht.Cells(id_match, sq_col).Value = "Y"\par
+    rsht.Cells(id_match, sq_dos).Value = dd\par
+    End If\par
+    n = n + 1\par
+Loop\par
+\par
+n = 2 'reset n\par
+RawLastRow = sht_ci.Cells(sht_sq.Rows.Count, "A").End(xlUp).Row\par
+Do Until n = RawLastRow + 1\par
+id_match = Application.match(sht_ci.Cells(n, 1).Value, rsht.Range("C1:C3000").Value, 0) 'returns row in the registry of the match\par
+    If IsError(id_match) Then 'if no match is found\par
+    'do nothing\par
+    Else\par
+    rsht.Cells(id_match, tob_user).Value = "Y"\par
+    rsht.Cells(id_match, tob_svc).Value = "Y"\par
+    rsht.Cells(id_match, tob_svc_dos).Value = dd\par
+    End If\par
+    n = n + 1\par
+Loop\par
+\par
+n = 2 'reset n\par
+RawLastRow = sht_pneu.Cells(sht_pneu.Rows.Count, "A").End(xlUp).Row\par
+Do Until n = RawLastRow + 1\par
+id_match = Application.match(sht_pneu.Cells(n, 1).Value, rsht.Range("C1:C3000").Value, 0) 'returns row in the registry of the match\par
+    If IsError(id_match) Then 'if no match is found\par
+    'do nothing\par
+    Else\par
+    rsht.Cells(id_match, pneu).Value = dd\par
+    End If\par
+    n = n + 1\par
+Loop\par
+\par
+n = 2 'reset n\par
+RawLastRow = sht_spi.Cells(sht_spi.Rows.Count, "A").End(xlUp).Row\par
+Do Until n = RawLastRow + 1\par
+id_match = Application.match(sht_spi.Cells(n, 1).Value, rsht.Range("C1:C3000").Value, 0) 'returns row in the registry of the match\par
+    If IsError(id_match) Then 'if no match is found\par
+    'do nothing\par
+    Else\par
+    If Application.RoundDown((dd - rsht.Cells(id_match, spiro).Value) / 365, 2) > 1 Then\par
+    'If it's been more than 1 year since last spiro\par
+     rsht.Cells(id_match, spiro).Value = dd\par
+    ElseIf rsht.Cells(id_match, spiro).Value = "" Then\par
+    'If there is no date for spiroo\par
+     rsht.Cells(id_match, spiro).Value = dd\par
+    End If\par
+    End If\par
+    n = n + 1\par
+Loop\par
+\par
+'''''''''''''''''''''''''''''''''''''''''''''\par
+' Create ranges and update all DOS1 and DOS2\par
+'''''''''''''''''''''''''''''''''''''''''''''\par
+RegLastRow = rsht.Cells(rsht.Rows.Count, "D").End(xlUp).Row\par
+Dim dos_rng As Range\par
+\par
+n = 2\par
+Do Until n = RegLastRow + 1\par
+\par
+rshtb.Cells(1, 1).Value = Int(rsht.Cells(n, a1c_dos).Value)\par
+rshtb.Cells(2, 1).Value = Int(rsht.Cells(n, bp_dos).Value)\par
+rshtb.Cells(3, 1).Value = Int(rsht.Cells(n, bmi_dos).Value)\par
+rshtb.Cells(4, 1).Value = Int(rsht.Cells(n, ldl_dos).Value)\par
+rshtb.Cells(5, 1).Value = Int(rsht.Cells(n, pneu).Value)\par
+rshtb.Cells(6, 1).Value = Int(rsht.Cells(n, spiro).Value)\par
+rshtb.Cells(7, 1).Value = Int(rsht.Cells(n, inh_dos).Value)\par
+rshtb.Cells(8, 1).Value = Int(rsht.Cells(n, dos1).Value)\par
+rshtb.Cells(9, 1).Value = Int(rsht.Cells(n, dos2).Value)\par
+\par
+Set dos_rng = rshtb.Range(rshtb.Cells(1, 1), rshtb.Cells(9, 1))\par
+    \par
+dos_max = Application.Max(dos_rng)\par
+dos2_max = 0 'place holder incase there is no other dos\par
+On Error Resume Next\par
+\par
+dos2_max = Application.Large(dos_rng, Application.CountIf(dos_rng, Application.Max(dos_rng)) + 1)\par
+If dos_max > 1 / 1 / 2000 Then\par
+    rsht.Cells(n, dos1).Value = dos_max\par
+    Else\par
+End If\par
+\par
+If dos2_max > 1 / 1 / 2000 Then\par
+    rsht.Cells(n, dos2).Value = dos2_max\par
+    Else\par
+End If\par
+      \par
+'recomputes age for entire sub reg\par
+dd = Application.EoMonth(Date, -1)\par
+rsht.Cells(n, age).Value = Application.RoundDown((dd - rsht.Cells(n, dob).Value) / 365, 0)\par
+\par
+n = n + 1\par
+   \par
+Loop\par
+\par
+EndMacro:\par
+Application.ScreenUpdating = True\par
+Application.DisplayStatusBar = True\par
+Application.EnableEvents = True\par
+ActiveSheet.DisplayPageBreaks = True\par
+Application.Calculation = xlCalculationAutomatic\par
+\par
+End Sub\par
+}
+ 
